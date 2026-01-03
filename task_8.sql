@@ -176,6 +176,10 @@ DEALLOCATE task_due_cursor;
 
 PRINT '--- Overdue Task Update Completed ---';
 GO
+-- Reset some tasks 
+UPDATE task
+SET status = 'Pending', due_date = DATEADD(DAY, -3, GETDATE())
+WHERE task_id IN (2, 3, 5);
 
 --reverse process
 UPDATE task
@@ -183,7 +187,3 @@ SET status = 'Pending'
 WHERE status = 'Overdue';
 
 
--- Reset some tasks 
-UPDATE task
-SET statuss = 'Pending', due_date = DATEADD(DAY, -3, GETDATE())
-WHERE task_id IN (2, 3, 5);
