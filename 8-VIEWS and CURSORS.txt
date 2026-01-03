@@ -1,0 +1,11 @@
+Create Views and Cursors
+
+--- VIEWS
+
+1. Create a view named vw_ActiveProjects that lists all projects that are currently active (i.e., EndDate is NULL).
+2. Create a view named vw_HighPriorityTasks that lists all tasks with Priority set to 'High'.
+
+--- CURSOR
+
+1. Create a cursor that iterates over all active projects and prints the project names.
+2. Create a cursor that iterates over all tasks, and if the current date is past the DueDate, update the Status to 'Overdue'.
