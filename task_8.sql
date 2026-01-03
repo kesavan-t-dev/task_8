@@ -33,7 +33,7 @@ INSERT INTO project (
 
 )
 vALUES (
-    'Mobile Apps Development', 
+    'Mobile Development', 
     '2025-02-01', 
     NULL, 
     50000, 
@@ -70,6 +70,8 @@ select * from project
 --display
 SELECT * from vw_active_projects
 
+DELETE FROM project
+WHERE project_id = 5
 -- drop if already exists
 DROP VIEW IF EXISTS dbo.vw_high_priority_tasks
 -- 2. Create a view named vw_HighPriorityTasks that lists all tasks with Priority set to 'High'.
@@ -97,6 +99,7 @@ SELECT * FROM vw_high_priority_tasks;
 /*
 --1. Create a cursor that iterates over all active projects and prints the project names..
 */
+
 SET NOCOUNT ON;
 -- Declare variable for project name
 DECLARE @project_names VARCHAR(150);
@@ -170,6 +173,7 @@ BEGIN
     FETCH NEXT FROM task_due_cursor INTO @task_id, @due_date, @current_status, @task_name;
 END
 
+
 -- Close and deallocate the cursor
 CLOSE task_due_cursor;
 DEALLOCATE task_due_cursor;
@@ -178,8 +182,10 @@ PRINT '--- Overdue Task Update Completed ---';
 GO
 -- Reset some tasks 
 UPDATE task
-SET status = 'Pending', due_date = DATEADD(DAY, -3, GETDATE())
-WHERE task_id IN (2, 3, 5);
+SET status = 'In Prgress', due_date = DATEADD(DAY, -3, GETDATE())
+WHERE task_id IN (2, 3, 5, 8, 10);
+
+select * from task
 
 --reverse process
 UPDATE task
