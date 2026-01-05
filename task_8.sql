@@ -106,31 +106,24 @@ SELECT * FROM vw_high_priority_tasks;
 */
 
 SET NOCOUNT ON;
--- Declare variable for project name
 DECLARE @project_names VARCHAR(150);
 
--- Declare the cursor to select active project names  
 DECLARE active_projects_cursor CURSOR FOR  
 SELECT project_name  
 FROM vw_active_projects;   
 
--- Open the cursor
 OPEN active_projects_cursor;
 
 
--- Fetch the first row
 FETCH NEXT FROM active_projects_cursor INTO @project_names;
 
--- Loop through all rows
 WHILE @@FETCH_STATUS = 0
 BEGIN
     PRINT 'Active Project: ' + @project_names;
 
-    -- Fetch the next row
     FETCH NEXT FROM active_projects_cursor INTO @project_names;
 END
 
--- Close and deallocate the cursor
 CLOSE active_projects_cursor;
 
 DEALLOCATE active_projects_cursor;
@@ -140,7 +133,6 @@ GO
 2. Create a cursor that iterates over all tasks, and if the current date is past the DueDate, update the Status to 'Overdue'.
 **/
 
--- Declare variables for cursor
 SET NOCOUNT ON;
 
 DECLARE @task_id INT;
@@ -148,15 +140,12 @@ DECLARE @due_date DATE;
 DECLARE @current_status VARCHAR(70);
 DECLARE @task_name VARCHAR(150);
 
--- Cursor to get all tasks
 DECLARE task_due_cursor CURSOR FOR
 SELECT task_id, due_date, status, task_name
 FROM task;
 
--- Open the cursor
 OPEN task_due_cursor;
 
--- Fetch the first row
 FETCH NEXT FROM task_due_cursor INTO @task_id, @due_date, @current_status, @task_name;
 
 PRINT '--- Overdue Task Update Started ---';
@@ -164,7 +153,7 @@ PRINT '--- Overdue Task Update Started ---';
 -- Loop through all rows
 WHILE @@FETCH_STATUS = 0
 BEGIN
-    -- Check if task is overdue
+
     IF GETDATE() > @due_date 
        AND @current_status NOT IN ('Completed', 'Overdue')
     BEGIN
@@ -175,17 +164,16 @@ BEGIN
         PRINT 'Task: ' + @task_name + ' (ID: ' + CAST(@task_id AS VARCHAR) + ') marked as Overdue';
     END
 
-    -- Fetch the next row
     FETCH NEXT FROM task_due_cursor INTO @task_id, @due_date, @current_status, @task_name;
 END
 
 
--- Close and deallocate the cursor
 CLOSE task_due_cursor;
 DEALLOCATE task_due_cursor;
 
 PRINT '--- Overdue Task Update Completed ---';
 GO
+
 -- Reset some tasks 
 UPDATE task
 SET status = 'In Prgress', due_date = DATEADD(DAY, -3, GETDATE())
