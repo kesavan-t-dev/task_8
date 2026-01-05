@@ -18,6 +18,8 @@ LEFT JOIN project p
 select * from TEST
 
 **/
+
+
 --before table status
 select * from project
 -- Allow NULL in end_date if needed
@@ -33,15 +35,16 @@ INSERT INTO project (
 
 )
 vALUES (
-    'Mobile Development', 
+    'Software Development', 
     '2025-02-01', 
     NULL, 
     50000, 
     'Completed'
-
 )
 
-
+UPDATE project
+SET status = 'Not Started'
+WHERE project_id = 5
 
 /**
     --- VIEWS
@@ -72,8 +75,10 @@ SELECT * from vw_active_projects
 
 DELETE FROM project
 WHERE project_id = 5
+
 -- drop if already exists
 DROP VIEW IF EXISTS dbo.vw_high_priority_tasks
+
 -- 2. Create a view named vw_HighPriorityTasks that lists all tasks with Priority set to 'High'.
 CREATE VIEW vw_high_priority_tasks
 AS
@@ -104,13 +109,14 @@ SET NOCOUNT ON;
 -- Declare variable for project name
 DECLARE @project_names VARCHAR(150);
 
--- Declare the cursor to select active project names
-DECLARE active_projects_cursor CURSOR FOR
-SELECT project_name
-FROM vw_active_projects;  
+-- Declare the cursor to select active project names  
+DECLARE active_projects_cursor CURSOR FOR  
+SELECT project_name  
+FROM vw_active_projects;   
 
 -- Open the cursor
 OPEN active_projects_cursor;
+
 
 -- Fetch the first row
 FETCH NEXT FROM active_projects_cursor INTO @project_names;
