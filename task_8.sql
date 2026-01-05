@@ -2,7 +2,13 @@
 use kesavan_db
 GO
 
+/*
+    SYSTEM DEFINED VIEW
+  
+SELECT *
+FROM sys.tables;
 
+*/
 
 /**
 CREATE VIEW TEST
@@ -18,7 +24,6 @@ LEFT JOIN project p
 select * from TEST
 
 **/
-
 
 --before table status
 select * from project
@@ -39,7 +44,7 @@ vALUES (
     '2025-02-01', 
     NULL, 
     50000, 
-    'Completed'
+    'In Progress'
 )
 
 UPDATE project
@@ -58,13 +63,9 @@ DROP VIEW IF EXISTS dbo.vw_active_projects
 --1. Create a view named vw_ActiveProjects that lists all projects that are currently active (i.e., EndDate is NULL).
 CREATE VIEW vw_active_projects
 AS
-SELECT 
-    project_name,
-    start_date,
-    end_date,
-    status
+SELECT  *
 FROM project
-WHERE status IN ('In Progress','Not Started')
+WHERE status IN ('In Progress')
 OR end_date IS NULL;
 GO
 
@@ -82,13 +83,7 @@ DROP VIEW IF EXISTS dbo.vw_high_priority_tasks
 -- 2. Create a view named vw_HighPriorityTasks that lists all tasks with Priority set to 'High'.
 CREATE VIEW vw_high_priority_tasks
 AS
-SELECT 
-    task_name,
-    description,
-    start_date,
-    due_date,
-    priority,
-    status
+SELECT *
 FROM task
 WHERE priority = 'High';
 GO
@@ -106,28 +101,32 @@ SELECT * FROM vw_high_priority_tasks;
 */
 
 SET NOCOUNT ON;
+
 DECLARE @project_names VARCHAR(150);
+DECLARE @Results TABLE (ActiveProject VARCHAR(150));
 
 DECLARE active_projects_cursor CURSOR FOR  
 SELECT project_name  
-FROM vw_active_projects;   
+FROM project;   
 
 OPEN active_projects_cursor;
-
 
 FETCH NEXT FROM active_projects_cursor INTO @project_names;
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
-    PRINT 'Active Project: ' + @project_names;
+    INSERT INTO @Results (ActiveProject)
+    VALUES (@project_names);
 
     FETCH NEXT FROM active_projects_cursor INTO @project_names;
 END
 
 CLOSE active_projects_cursor;
-
 DEALLOCATE active_projects_cursor;
-GO
+
+-- Output in table format
+SELECT * FROM @Results;
+
 
 /**
 2. Create a cursor that iterates over all tasks, and if the current date is past the DueDate, update the Status to 'Overdue'.
@@ -140,6 +139,13 @@ DECLARE @due_date DATE;
 DECLARE @current_status VARCHAR(70);
 DECLARE @task_name VARCHAR(150);
 
+DECLARE @UpdatedTasks TABLE (
+    TaskID INT,
+    TaskName VARCHAR(150),
+    DueDate DATE,
+    NewStatus VARCHAR(70)
+);
+
 DECLARE task_due_cursor CURSOR FOR
 SELECT task_id, due_date, status, task_name
 FROM task;
@@ -148,31 +154,26 @@ OPEN task_due_cursor;
 
 FETCH NEXT FROM task_due_cursor INTO @task_id, @due_date, @current_status, @task_name;
 
-PRINT '--- Overdue Task Update Started ---';
-
--- Loop through all rows
 WHILE @@FETCH_STATUS = 0
 BEGIN
-
     IF GETDATE() > @due_date 
-       AND @current_status NOT IN ('Completed', 'Overdue')
+       AND @current_status NOT IN ('Completed', 'Overdue','Not Started')
     BEGIN
         UPDATE task
         SET status = 'Overdue'
         WHERE task_id = @task_id;
 
-        PRINT 'Task: ' + @task_name + ' (ID: ' + CAST(@task_id AS VARCHAR) + ') marked as Overdue';
+        INSERT INTO @UpdatedTasks (TaskID, TaskName, DueDate, NewStatus)
+        VALUES (@task_id, @task_name, @due_date, 'Overdue');
     END
 
     FETCH NEXT FROM task_due_cursor INTO @task_id, @due_date, @current_status, @task_name;
 END
 
-
 CLOSE task_due_cursor;
 DEALLOCATE task_due_cursor;
 
-PRINT '--- Overdue Task Update Completed ---';
-GO
+SELECT * FROM @UpdatedTasks;
 
 -- Reset some tasks 
 UPDATE task
