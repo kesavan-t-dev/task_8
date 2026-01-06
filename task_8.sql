@@ -32,11 +32,11 @@ ALTER TABLE project ALTER COLUMN end_date DATE NULL;
 
 --inserting null values
 EXEC sp_insert_project 'UI development','2025-05-06',NULL,'23000','In Progress' ;
-EXEC sp_insert_project 'Web application development','2025-03-25','2025-12-22','43000','In Progress' ;
+EXEC sp_insert_project 'Web application development','2025-03-25','2025-12-22','43000','Completed' ;
 EXEC sp_insert_project 'UX development','2025-05-06',NULL,'23000','In Progress' ;
 
 
-select * from project
+select * from project;
 /**
     --- VIEWS
 **/
@@ -46,11 +46,13 @@ select * from project
 DROP VIEW IF EXISTS dbo.vw_active_projects
 
 --1. Create a view named vw_ActiveProjects that lists all projects that are currently active (i.e., EndDate is NULL).
-CREATE VIEW vw_active_projects
+CREATE OR ALTER VIEW vw_active_projects
 AS
-SELECT  *
+SELECT *
 FROM project
-WHERE end_date IS NULL;
+WHERE end_date IS NULL
+   OR status = 'In Progress';
+
 GO
 
 select * from project
@@ -59,7 +61,7 @@ select * from project
 SELECT * from vw_active_projects
 
 UPDATE project
-SET end_date = NULL
+SET end_date = '2026-01-24'
 WHERE project_id = 6;
 
 
@@ -88,9 +90,8 @@ SELECT * FROM vw_high_priority_tasks;
 */
 
 SET NOCOUNT ON;
-
 DECLARE @project_names VARCHAR(150);
-DECLARE @Results TABLE (ActiveProject VARCHAR(150));
+DECLARE @results TABLE (ActiveProject VARCHAR(150));
 
 DECLARE active_projects_cursor CURSOR FOR  
 SELECT project_name  
@@ -102,7 +103,7 @@ FETCH NEXT FROM active_projects_cursor INTO @project_names;
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
-    INSERT INTO @Results (ActiveProject)
+    INSERT INTO @results (ActiveProject)
     VALUES (@project_names);
 
     FETCH NEXT FROM active_projects_cursor INTO @project_names;
@@ -111,15 +112,17 @@ END
 CLOSE active_projects_cursor;
 DEALLOCATE active_projects_cursor;
 
--- Output in table format
-SELECT * FROM @Results;
+-- Output once
+SELECT ActiveProject FROM @results;
+
+
 
 
 /**
 2. Create a cursor that iterates over all tasks, and if the current date is past the DueDate, update the Status to 'Overdue'.
 **/
 
-SET NOCOUNT ON;
+
 
 DECLARE @task_id INT;
 DECLARE @due_date DATE;
@@ -138,7 +141,7 @@ FETCH NEXT FROM task_due_cursor INTO @task_id, @due_date, @current_status, @task
 WHILE @@FETCH_STATUS = 0
 BEGIN
     IF GETDATE() > @due_date 
-       AND @current_status NOT IN ('Completed', 'Overdue', 'Not Started')
+       AND @current_status NOT IN ('Completed', 'Overdue')
     BEGIN
         UPDATE task
         SET status = 'Overdue'
@@ -155,19 +158,21 @@ CLOSE task_due_cursor;
 DEALLOCATE task_due_cursor;
 
 -- results
-SELECT * FROM task;
+SELECT * 
+FROM task 
+WHERE status = 'Overdue';
 
 
--- Reset some tasks 
+-- change task date to future date it will be in progress if is in past it will be completed
 UPDATE task
-SET status = 'In Prgress', due_date = DATEADD(DAY, -3, GETDATE())
-WHERE task_id IN (2, 3, 5, 8, 10);
+SET due_date = '2025-08-27'
+WHERE task_id IN (2, 3);
 
 select * from task
 
 --reverse process
 UPDATE task
-SET status = 'Pending'
+SET status = 'In progress'
 WHERE status = 'Overdue';
 
 
