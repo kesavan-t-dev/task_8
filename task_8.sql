@@ -70,7 +70,7 @@ select * from project
 DROP VIEW IF EXISTS dbo.vw_high_priority_tasks
 
 -- 2. Create a view named vw_HighPriorityTasks that lists all tasks with Priority set to 'High'.
-CREATE VIEW vw_high_priority_tasks
+CREATE OR ALTER VIEW vw_high_priority_tasks
 AS
 SELECT *
 FROM task
