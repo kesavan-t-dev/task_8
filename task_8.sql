@@ -123,7 +123,7 @@ SELECT ActiveProject FROM @results;
 **/
 
 
-
+SET NOCOUNT ON;
 DECLARE @task_id INT;
 DECLARE @due_date DATE;
 DECLARE @current_status VARCHAR(70);
@@ -165,8 +165,8 @@ WHERE status = 'Overdue';
 
 -- change task date to future date it will be in progress if is in past it will be completed
 UPDATE task
-SET due_date = '2025-08-27'
-WHERE task_id IN (2, 3);
+SET due_date = '2026-01-25',  status = 'In Progress'
+WHERE task_id IN (7);
 
 select * from task
 
