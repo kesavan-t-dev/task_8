@@ -31,30 +31,15 @@ select * from project
 ALTER TABLE project ALTER COLUMN end_date DATE NULL;
 
 --inserting null values
-INSERT INTO project (
-    project_name, 
-    start_date, 
-    end_date, 
-    budget, 
-    status
+EXEC sp_insert_project 'UI development','2025-05-06',NULL,'23000','In Progress' ;
+EXEC sp_insert_project 'Web application development','2025-03-25','2025-12-22','43000','In Progress' ;
+EXEC sp_insert_project 'UX development','2025-05-06',NULL,'23000','In Progress' ;
 
-)
-vALUES (
-    'Software Development', 
-    '2025-02-01', 
-    NULL, 
-    50000, 
-    'In Progress'
-)
 
-UPDATE project
-SET status = 'Not Started'
-WHERE project_id = 5
-
+select * from project
 /**
     --- VIEWS
 **/
-
 
 
 -- drop if already exists
@@ -65,8 +50,7 @@ CREATE VIEW vw_active_projects
 AS
 SELECT  *
 FROM project
-WHERE status IN ('In Progress')
-OR end_date IS NULL;
+WHERE end_date IS NULL;
 GO
 
 select * from project
@@ -74,9 +58,12 @@ select * from project
 --display
 SELECT * from vw_active_projects
 
-DELETE FROM project
-WHERE project_id = 5
+UPDATE project
+SET end_date = NULL
+WHERE project_id = 6;
 
+
+select * from project
 -- drop if already exists
 DROP VIEW IF EXISTS dbo.vw_high_priority_tasks
 
@@ -107,7 +94,7 @@ DECLARE @Results TABLE (ActiveProject VARCHAR(150));
 
 DECLARE active_projects_cursor CURSOR FOR  
 SELECT project_name  
-FROM project;   
+FROM vw_active_projects;   
 
 OPEN active_projects_cursor;
 
@@ -139,12 +126,6 @@ DECLARE @due_date DATE;
 DECLARE @current_status VARCHAR(70);
 DECLARE @task_name VARCHAR(150);
 
-DECLARE @UpdatedTasks TABLE (
-    TaskID INT,
-    TaskName VARCHAR(150),
-    DueDate DATE,
-    NewStatus VARCHAR(70)
-);
 
 DECLARE task_due_cursor CURSOR FOR
 SELECT task_id, due_date, status, task_name
@@ -157,13 +138,13 @@ FETCH NEXT FROM task_due_cursor INTO @task_id, @due_date, @current_status, @task
 WHILE @@FETCH_STATUS = 0
 BEGIN
     IF GETDATE() > @due_date 
-       AND @current_status NOT IN ('Completed', 'Overdue','Not Started')
+       AND @current_status NOT IN ('Completed', 'Overdue', 'Not Started')
     BEGIN
         UPDATE task
         SET status = 'Overdue'
         WHERE task_id = @task_id;
 
-        INSERT INTO @UpdatedTasks (TaskID, TaskName, DueDate, NewStatus)
+        INSERT INTO task (task_id, task_name, due_date, status)
         VALUES (@task_id, @task_name, @due_date, 'Overdue');
     END
 
@@ -173,7 +154,9 @@ END
 CLOSE task_due_cursor;
 DEALLOCATE task_due_cursor;
 
-SELECT * FROM @UpdatedTasks;
+-- results
+SELECT * FROM task;
+
 
 -- Reset some tasks 
 UPDATE task
